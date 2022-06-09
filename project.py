@@ -9,24 +9,31 @@ stars = db["starship"]
 characters = db["characters"]
 
 
-def get_api_data(url):
+def extract_api_data(url):
     get_request = requests.get(url)
     data = get_request.json()
     return data
 
 
-def extract_from_api_data(data):
-    return_list = []
-    translation = {}
-    for index, starship_item in enumerate(tqdm(data["results"])):
-        for pilot_link in starship_item["pilots"]:
-            translation[pilot_link] = pilot_url_to_name(pilot_link)
-        return_list.append(starship_item)
-    return return_list, translation
+def change_pilot_links_to_names(data):
+    new_stars = []
+    name_2_id = generate_name_id()
+    link_2_id = {}
+
+    for index, star_obj in enumerate(tqdm(data["results"])):
+        for pilot_link in star_obj["pilots"]:
+            if pilot_link not in link_2_id:
+                name = pilot_link_to_name(pilot_link)
+                link_2_id[pilot_link] = name_2_id[name]
+
+        # change pilot links to id, hence add to list
+        star_obj = map_pilot_link_2_id(star_obj, link_2_id)
+        new_stars.append(star_obj)
+    return new_stars
 
 
-def pilot_url_to_name(link):
-    data = get_api_data(link)
+def pilot_link_to_name(link):
+    data = extract_api_data(link)
     return data["name"]
 
 
@@ -37,32 +44,31 @@ def generate_name_id():
     return translation
 
 
-def starship_pilot_to_id(star_list, link_to_name, name_to_id):
-    for index_star, starship in enumerate(star_list):
-        for index_pilot, pilot_link in enumerate(starship["pilots"]):
-            pilot_name = link_to_name[pilot_link]
-            pilot_id = name_to_id[pilot_name]
-            star_list[index_star]["pilots"][index_pilot] = pilot_id
+def map_pilot_link_2_id(star_list, link_to_name):
+    for index_pilot, pilot_link in enumerate(star_list["pilots"]):
+        pilot_id = link_to_name[pilot_link]
+        star_list["pilots"][index_pilot] = pilot_id
     return star_list
 
 
-def view_data(data):
-    for i in data:
-        print(i, end="\n\n")
+def view_data(data, options=None):
+    if options:
+        for i, v in enumerate(data):
+            for opt in options:
+                print(f"{opt:<7}= {v[opt]}")
+            print("\n", end="")
+    else:
+        for i in data:
+            print(i, end="\n\n")
 
 
 # MAIN
 
-starship_api_data = get_api_data("https://swapi.dev/api/starships")
-starship_list, link_2_name = extract_from_api_data(starship_api_data)
-name_2_id = generate_name_id()
-starship_list = starship_pilot_to_id(starship_list, link_2_name, name_2_id)
-
+starship_api_data = extract_api_data("https://swapi.dev/api/starships")
+starship_list = change_pilot_links_to_names(starship_api_data)
 
 # Clean the starship database first, then insert
 stars.drop()
 stars.insert_many(starship_list)
 
-
-view_data(starship_list)
-
+view_data(starship_list, options=["name", "pilots"])

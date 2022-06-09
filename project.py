@@ -1,5 +1,6 @@
 import requests
 import pymongo
+from tqdm import tqdm
 
 # configure database access
 client = pymongo.MongoClient()
@@ -17,7 +18,7 @@ def get_api_data(url):
 def extract_from_api_data(data):
     return_list = []
     translation = {}
-    for index, starship_item in enumerate(data["results"]):
+    for index, starship_item in enumerate(tqdm(data["results"])):
         for pilot_link in starship_item["pilots"]:
             translation[pilot_link] = pilot_url_to_name(pilot_link)
         return_list.append(starship_item)

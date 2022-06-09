@@ -52,8 +52,8 @@ def view_data(data, options):
 
 # MAIN
 
-api_date = get_api_data("https://swapi.dev/api/starships", "results")
-starship_list = change_pilot_links_to_names(api_date)
+api_data = get_api_data("https://swapi.dev/api/starships", "results")
+starship_list = change_pilot_links_to_names(api_data)
 
 # Clean the starship database first, then insert
 starships.drop()

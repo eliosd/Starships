@@ -14,7 +14,7 @@ def get_api_data(url):
     return data
 
 
-def extract_from_api_date(data):
+def extract_from_api_data(data):
     return_list = []
     translation = {}
     for index, starship_item in enumerate(data["results"]):
@@ -53,7 +53,7 @@ def view_data(data):
 # MAIN
 
 starship_api_data = get_api_data("https://swapi.dev/api/starships")
-starship_list, link_2_name = extract_from_api_date(starship_api_data)
+starship_list, link_2_name = extract_from_api_data(starship_api_data)
 name_2_id = generate_name_id()
 starship_list = starship_pilot_to_id(starship_list, link_2_name, name_2_id)
 
